@@ -2,7 +2,7 @@ name: Create a comment on new issues
 
 on:
   issues:
-    types: [opened]assigned
+    types: [opened]
 
 jobs:
   comment-with-action:
