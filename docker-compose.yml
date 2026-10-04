@@ -1,0 +1,102 @@
+# docker-compose.yml
+name: croakedup
+
+x-logging: &default-logging
+  driver: "json-file"
+  options: { max-size: "10m", max-file: "5" }
+
+services:
+  # ---------------- Service de jeu ----------------
+  game-telemetry:
+    build: .
+    image: ghcr.io/croakedup/croakedup:${TAG:-latest}
+    container_name: croakedup-game
+    environment:
+      PORT: "8080"
+      LOG_FILE: /var/log/croakedup/che.3t.log
+      LOG_STDOUT: "1"
+      BUILD: "${BUILD:-beta-local}"
+      GAMES_PER_MINUTE: "6"
+      SPEED: "1"
+      INCIDENTS: "1"
+    ports: ["8080:8080"]
+    volumes:
+      - ./logs:/var/log/croakedup
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    logging: *default-logging
+    restart: unless-stopped
+
+  # ---------------- Générateur de charge ----------------
+  loadgen:
+    build: .
+    image: ghcr.io/croakedup/croakedup:${TAG:-latest}
+    container_name: croakedup-loadgen
+    depends_on:
+      game-telemetry: { condition: service_healthy }
+    environment:
+      TARGET: http://game-telemetry:8080
+    command: ["node", "scripts/loadgen.js", "--rps", "5", "--burst-every", "120", "--burst-rps", "80"]
+    logging: *default-logging
+    restart: unless-stopped
+
+  # ---------------- Collecte ----------------
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: croakedup-prometheus
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=15d"
+    ports: ["9090:9090"]
+    logging: *default-logging
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.2.1
+    container_name: croakedup-loki
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes:
+      - ./observability/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    ports: ["3100:3100"]
+    logging: *default-logging
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:3.2.1
+    container_name: croakedup-promtail
+    volumes:
+      - ./logs:/var/log/croakedup:ro
+      - ./observability/promtail-config.yaml:/etc/promtail/config.yml:ro
+    command: ["-config.file=/etc/promtail/config.yml"]
+    depends_on: [loki]
+    logging: *default-logging
+    restart: unless-stopped
+
+  # ---------------- Visualisation ----------------
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: croakedup-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_PASSWORD:-croakedup}"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: ""
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports: ["3000:3000"]
+    depends_on: [prometheus, loki]
+    logging: *default-logging
+    restart: unless-stopped
+
+volumes:
+  prom-data:
+  loki-data:
+  grafana-data:
