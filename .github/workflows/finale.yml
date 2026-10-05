@@ -1,0 +1,20 @@
+name: CI/CD CroakedUp
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - name: Build Docker image
+        run: docker build -t croakedup:${{ github.sha }} .
+      - name: Scan vulnérabilités
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: croakedup:${{ github.sha }}
+          severity: 'CRITICAL'
+          exit-code: '1'
