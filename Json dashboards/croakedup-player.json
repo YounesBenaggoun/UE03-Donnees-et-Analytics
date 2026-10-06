@@ -1,0 +1,88 @@
+{
+  "title": "CroakedUp · Performance joueur",
+  "uid": "croakedup-player",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Quelle est la part des rapports réseau ?",
+      "targets": [
+        {
+          "expr": "croakedup:network_ratio5m",
+          "legendFormat": "network"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8F9E7A"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Quels builds génèrent le plus de rapports ?",
+      "targets": [
+        {
+          "expr": "sum by(build) (rate(croakedup_reports_total[5m]))",
+          "legendFormat": "{{build}}"
+        }
+      ],
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#C9A646"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Quelles signatures de saccades arrivent ?",
+      "targets": [
+        {
+          "expr": "{job=\"croakedup\",event=\"perf_spike\"} | json | line_format \"{{.ts}} {{.report.classification}} {{.report.frameMs}}ms {{.report.build}}\""
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 24,
+        "h": 10
+      },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLines": false,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true
+      }
+    }
+  ],
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "description": "Palette CroakedUp: #8F9E7A #C9A646 #1B1D18 #EFE8D6."
+}
