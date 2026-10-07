@@ -6,6 +6,8 @@ Service de télémétrie d'un jeu de tir multijoueur web (parties 1 à 2 joueurs
 
 
 
+Changement de readme à prévoir
+
 ```bash
 npm ci
 npm start                  # API sur :8080, logs JSON lines dans logs/telemetry.log et stdout
