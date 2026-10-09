@@ -1,0 +1,88 @@
+{
+  "title": "CroakedUp · Activité et intégrité",
+  "uid": "croakedup-integrity",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Combien de parties se terminent par minute ?",
+      "targets": [
+        {
+          "expr": "sum(rate(croakedup_games_completed_total[5m]))*60",
+          "legendFormat": "games/min"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8F9E7A"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Quel est le volume de rapports par build ?",
+      "targets": [
+        {
+          "expr": "sum by(build) (rate(croakedup_reports_total[15m]))",
+          "legendFormat": "{{build}}"
+        }
+      ],
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#C9A646"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Quelles parties présentent des indices d'intégrité ?",
+      "targets": [
+        {
+          "expr": "{job=\"croakedup\",event=\"game_completed\"} | json | line_format \"{{.ts}} {{.server.id}} map={{.server.map}} score={{.server.score}} quarantined={{.server.quarantined}}\""
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 24,
+        "h": 10
+      },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLines": false,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true
+      }
+    }
+  ],
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "description": "Palette CroakedUp: #8F9E7A #C9A646 #1B1D18 #EFE8D6."
+}
