@@ -1,5 +1,7 @@
 # Rattrapage UE 03 – Données et Analytics
 
+lien du dépot gitHub https://github.com/YounesBenaggoun/UE03-Donnees-et-Analytics
+
 ## Présentation du projet
 
 Ce projet est réalisé dans le cadre du rattrapage de l'UE 03 – Données et Analytics.
